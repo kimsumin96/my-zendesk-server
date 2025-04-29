@@ -1,33 +1,29 @@
-from flask import Flask, request, jsonify
 import subprocess
+import os
+from flask import Flask, jsonify
 
 app = Flask(__name__)
-import os
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
 
 
-@app.route('/run-script', methods=['POST'])
+@app.route("/run-script", methods=["POST"])
 def run_script():
     try:
-        # 실제로 실행할 Python 스크립트 경로
-        result = subprocess.run(['python', 'C:/Users/user/sumin_s/sum/sum_s/sum2/main.py'], capture_output=True, text=True)
-        
-        # 스크립트 실행 결과를 반환
+        # 현재 파일(app.py) 기준으로 main.py 경로를 지정
+        script_path = os.path.join(os.path.dirname(__file__), "main.py")
+        result = subprocess.run(
+            ["python", script_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
         return jsonify({
-            'status': 'success',
-            'output': result.stdout,
-            'error': result.stderr
+            "message": "Script executed successfully.",
+            "stdout": result.stdout
         })
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         return jsonify({
-            'status': 'error',
-            'message': str(e)
-        })
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
+            "error": "Script execution failed",
+            "stderr": e.stderr
+        }), 500
     
+print("✅ main.py가 Render 서버에서 실행되었습니다!")
